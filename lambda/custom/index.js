@@ -1,14 +1,84 @@
 const Alexa = require('ask-sdk-core');
 const axios = require('axios');
+const i18n = require('i18next');
+const languageStrings = require('./languageStrings');
+
+const SYNIAN_FALLBACK_MESSAGE = 'No pude comunicarme con Synian en este momento, intenta más tarde.';
+
+class SynianConnector {
+    constructor(logger = console) {
+        this.logger = logger;
+        const headers = { 'Content-Type': 'application/json' };
+        const apiKey = process.env.SYNIAN_API_KEY;
+
+        if (apiKey) {
+            headers.Authorization = `Bearer ${apiKey}`;
+        }
+
+        this.client = axios.create({
+            baseURL: 'https://api.synian.app',
+            timeout: 8000,
+            headers
+        });
+    }
+
+    async getStatus() {
+        try {
+            const { data } = await this.client.get('/status');
+            return data;
+        } catch (error) {
+            this.logError('getStatus', error);
+            throw error;
+        }
+    }
+
+    async sendQuery(query, metadata = {}) {
+        try {
+            const payload = { query, ...metadata };
+            const { data } = await this.client.post('/alexa-query', payload);
+            return data;
+        } catch (error) {
+            this.logError('sendQuery', error);
+            throw error;
+        }
+    }
+
+    async sendCommand(command, metadata = {}) {
+        try {
+            const payload = { command, ...metadata };
+            const { data } = await this.client.post('/command', payload);
+            return data;
+        } catch (error) {
+            this.logError('sendCommand', error);
+            throw error;
+        }
+    }
+
+    logError(operation, error) {
+        const message = error?.response?.data || error?.message || error;
+        this.logger.error(`SynianConnector ${operation} error:`, message);
+    }
+}
+
+const synianConnector = new SynianConnector();
+
+const getFirstSlotValue = (handlerInput) => {
+    const slots = handlerInput?.requestEnvelope?.request?.intent?.slots || {};
+    const firstSlotWithValue = Object.values(slots).find((slot) => slot && slot.value);
+    return firstSlotWithValue ? firstSlotWithValue.value : undefined;
+};
+
+const extractMetadata = (handlerInput) => ({
+    locale: Alexa.getLocale(handlerInput.requestEnvelope),
+    userId: handlerInput.requestEnvelope?.context?.System?.user?.userId
+});
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        console.info('LaunchRequest received');
         const speakOutput = 'Hola, soy Synian. ¿En qué puedo ayudarte hoy?';
-
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt('¿En qué puedo ayudarte hoy?')
@@ -22,38 +92,20 @@ const GetStatusIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'GetStatusIntent';
     },
     async handle(handlerInput) {
-        console.info('GetStatusIntent received');
-
         try {
-            const response = await axios.get('https://api.synian.app/status');
-            console.info('Status API response', response.data);
-
-            let statusMessage;
-            if (response && response.data) {
-                if (typeof response.data === 'string') {
-                    statusMessage = response.data;
-                } else if (response.data.message) {
-                    statusMessage = response.data.message;
-                } else if (response.data.status) {
-                    statusMessage = response.data.status;
-                }
-            }
-
-            const speakOutput = statusMessage
-                ? `El estado actual de Synian es: ${statusMessage}.`
-                : 'Synian está operativo en este momento.';
+            const status = await synianConnector.getStatus();
+            const isOnline = Boolean(status?.online) || (typeof status?.status === 'string' && status.status.toLowerCase() === 'ok');
+            const speakOutput = isOnline
+                ? 'Synian está en línea y listo para ayudarte.'
+                : 'Synian no está disponible en este momento.';
 
             return handlerInput.responseBuilder
                 .speak(speakOutput)
-                .reprompt('¿Necesitas algo más?')
                 .getResponse();
         } catch (error) {
-            console.error('Error retrieving status', error);
-            const speakOutput = 'Lo siento, no puedo obtener el estado de Synian en este momento. ¿Quieres intentar de nuevo más tarde?';
-
+            console.error('GetStatusIntent error:', error);
             return handlerInput.responseBuilder
-                .speak(speakOutput)
-                .reprompt('¿Quieres intentar otra cosa?')
+                .speak(SYNIAN_FALLBACK_MESSAGE)
                 .getResponse();
         }
     }
@@ -65,53 +117,71 @@ const QueryIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'QueryIntent';
     },
     async handle(handlerInput) {
-        console.info('QueryIntent received');
-        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const request = handlerInput.requestEnvelope.request;
-        const userInput = request.intent && request.intent.slots && request.intent.slots.QueryText
-            ? request.intent.slots.QueryText.value
-            : undefined;
-
-        if (!userInput) {
-            console.info('QueryIntent invoked without QueryText slot');
-            const speakOutput = 'No escuché tu consulta. ¿Podrías repetirla?';
+        const userQuery = getFirstSlotValue(handlerInput);
+        if (!userQuery) {
             return handlerInput.responseBuilder
-                .speak(speakOutput)
-                .reprompt('¿Qué deseas preguntar a Synian?')
+                .speak('Necesito que me digas qué quieres saber de Synian.')
+                .reprompt('¿Qué quieres preguntar a Synian?')
                 .getResponse();
         }
 
         try {
-            const response = await axios.post('https://api.synian.app/alexa-query', {
-                query: userInput,
-                locale
-            });
-            console.info('Query API response', response.data);
+            const metadata = extractMetadata(handlerInput);
+            const response = await synianConnector.sendQuery(userQuery, metadata);
+            const speakOutput = response?.reply || response?.response || response?.message;
 
-            let answer;
-            if (response && response.data) {
-                if (typeof response.data === 'string') {
-                    answer = response.data;
-                } else if (response.data.answer) {
-                    answer = response.data.answer;
-                } else if (response.data.message) {
-                    answer = response.data.message;
-                }
+            if (speakOutput) {
+                return handlerInput.responseBuilder
+                    .speak(speakOutput)
+                    .getResponse();
             }
 
-            const speakOutput = answer || 'Synian no tiene una respuesta en este momento.';
-
+            console.warn('QueryIntent empty response from Synian:', response);
             return handlerInput.responseBuilder
-                .speak(speakOutput)
-                .reprompt('¿Hay algo más en lo que pueda ayudarte?')
+                .speak(SYNIAN_FALLBACK_MESSAGE)
                 .getResponse();
         } catch (error) {
-            console.error('Error invoking Synian Core', error);
-            const speakOutput = 'Ocurrió un problema al comunicarme con Synian. ¿Quieres intentar de nuevo?';
-
+            console.error('QueryIntent error:', error);
             return handlerInput.responseBuilder
-                .speak(speakOutput)
-                .reprompt('¿Quieres intentar algo diferente?')
+                .speak(SYNIAN_FALLBACK_MESSAGE)
+                .getResponse();
+        }
+    }
+};
+
+const CommandIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'CommandIntent';
+    },
+    async handle(handlerInput) {
+        const commandText = getFirstSlotValue(handlerInput);
+        if (!commandText) {
+            return handlerInput.responseBuilder
+                .speak('Necesito que me digas qué acción deseas que Synian ejecute.')
+                .reprompt('Indica el comando que debo enviar a Synian.')
+                .getResponse();
+        }
+
+        try {
+            const metadata = extractMetadata(handlerInput);
+            const response = await synianConnector.sendCommand(commandText, metadata);
+            const speakOutput = response?.confirmation || response?.message || response?.status;
+
+            if (speakOutput) {
+                return handlerInput.responseBuilder
+                    .speak(typeof speakOutput === 'string' ? speakOutput : JSON.stringify(speakOutput))
+                    .getResponse();
+            }
+
+            console.warn('CommandIntent empty response from Synian:', response);
+            return handlerInput.responseBuilder
+                .speak('Tu comando fue enviado a Synian.')
+                .getResponse();
+        } catch (error) {
+            console.error('CommandIntent error:', error);
+            return handlerInput.responseBuilder
+                .speak(SYNIAN_FALLBACK_MESSAGE)
                 .getResponse();
         }
     }
@@ -123,9 +193,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        console.info('HelpIntent received');
-        const speakOutput = 'Puedes preguntarme por el estado de Synian o pedirle a Synian que responda tus consultas. ¿Qué deseas hacer?';
-
+        const speakOutput = 'Puedes preguntarme por el estado de Synian o pedirle que responda tus consultas. ¿Qué deseas hacer?';
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt('¿Qué deseas hacer?')
@@ -140,7 +208,6 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     handle(handlerInput) {
-        console.info('Cancel or Stop intent received');
         return handlerInput.responseBuilder
             .speak('Hasta luego.')
             .getResponse();
@@ -163,9 +230,7 @@ const IntentReflectorHandler = {
     },
     handle(handlerInput) {
         const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-        console.info(`IntentReflector handling intent: ${intentName}`);
         const speakOutput = `Acabas de activar ${intentName}.`;
-
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
@@ -179,7 +244,6 @@ const ErrorHandler = {
     handle(handlerInput, error) {
         console.error('Global error handler invoked', error);
         const speakOutput = 'Lo siento, ocurrió un error. Intenta de nuevo.';
-
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt('¿Puedes intentarlo de nuevo?')
@@ -192,6 +256,7 @@ exports.handler = Alexa.SkillBuilders.custom()
         LaunchRequestHandler,
         GetStatusIntentHandler,
         QueryIntentHandler,
+        CommandIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         SessionEndedRequestHandler,
