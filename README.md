@@ -1,32 +1,62 @@
-# Build An Alexa Hello World Skill
-<img src="https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/tutorials/quiz-game/header._TTH_.png" />
+# Synian Alexa Skill
 
-### This is a simple tutorial to introduce a simple Alexa skill and code.
+Este repositorio contiene el código del skill **Synian Assistant** para Alexa. El backend se ejecuta en AWS Lambda y delega las respuestas en los servicios de Synian para devolver información de estado y responder consultas.
 
-## Skill Architecture
-Each skill consists of two basic parts, a front end and a back end.
-The front end is the voice interface, or VUI.
-The voice interface is configured through the voice interaction model.
-The back end is where the logic of your skill resides.
+## Requisitos previos
 
-## Three Options for Skill Setup
-There are a number of different ways for you to setup your skill, depending on your experience and what tools you have available.
+* [Node.js](https://nodejs.org/) 18.x o superior.
+* [ASK CLI](https://developer.amazon.com/en-US/docs/alexa/smapi/quick-start-alexa-skills-kit-command-line-interface.html) configurado con tus credenciales de AWS.
+* Acceso a la consola de [Alexa Developer](https://developer.amazon.com/alexa/console/ask) con el skill Synian Assistant importado.
 
- * If this is your first skill, choose the [Alexa-Hosted backend instructions](./instructions/setup-vui-alexa-hosted.md) to get started quickly.
- * Developers with the ASK Command Line Interface configured may follow the [ASK CLI instructions](https://github.com/alexa/ask-cli).
+## Instalación de dependencias
 
----
+Todos los scripts se ejecutan desde el directorio `lambda/custom` porque allí se encuentra el código de la función Lambda y su `package.json`.
 
-## Additional Resources
+```bash
+cd lambda/custom
+npm install
+```
 
-### Community
-* [Amazon Developer Forums](https://forums.developer.amazon.com/spaces/165/index.html) - Join the conversation!
-* [Hackster.io](https://www.hackster.io/amazon-alexa) - See what others are building with Alexa.
+## Pruebas locales con peticiones JSON
 
-### Tutorials & Guides
-* [Voice Design Guide](https://developer.amazon.com/fr/designing-for-voice/) - A great resource for learning conversational and voice user interface design.
-* [Codecademy: Learn Alexa](https://www.codecademy.com/learn/learn-alexa) - Learn how to build an Alexa Skill from within your browser with this beginner friendly tutorial on Codecademy!
+El script `testSkill.js` emula las peticiones principales del skill utilizando el manejador de Lambda exportado en `index.js`.
 
-### Documentation
-* [Official Alexa Skills Kit Node.js SDK](https://www.npmjs.com/package/ask-sdk) - The Official Node.js SDK Documentation
-*  [Official Alexa Skills Kit Documentation](https://developer.amazon.com/docs/ask-overviews/build-skills-with-the-alexa-skills-kit.html) - Official Alexa Skills Kit Documentation
+1. Ajusta las variables de entorno según sea necesario:
+   * `ASK_SKILL_ID`: identifica el skill en pruebas (por defecto `amzn1.ask.skill.synian-assistant`).
+   * `ASK_TEST_USER_ID` y `ASK_TEST_DEVICE_ID`: opcional para personalizar los identificadores simulados.
+2. Ejecuta el flujo completo:
+
+```bash
+npm run local-test
+```
+
+El comando lanza secuencialmente un `LaunchRequest`, el intent `GetStatusIntent` y el intent `QueryIntent`. En la consola verás las respuestas completas generadas por la API de Synian, incluidos los mensajes SSML que Alexa pronunciaría y los reprompts configurados.
+
+## Despliegue al entorno `development`
+
+La configuración de ASK CLI define un entorno llamado `development` que apunta al ARN de la función Lambda `SynianAssistantDev` en la región `us-east-1` (`.ask/config`). Para publicar cambios en dicho entorno ejecuta:
+
+```bash
+npm run deploy
+```
+
+El script invoca `ask deploy --env development`, desplegando tanto el modelo del skill como el código Lambda. Si necesitas usar un perfil diferente de ASK CLI puedes anteponer `ASK_PROFILE=<tu_perfil>` al comando anterior.
+
+## Verificación en la Alexa Developer Console
+
+1. Accede a la consola de Alexa Developer y abre el skill Synian Assistant.
+2. En la pestaña **Build**, verifica que los intents `GetStatusIntent` y `QueryIntent` aparezcan en el Interaction Model. Publica los cambios si realizas ajustes.
+3. Cambia a la pestaña **Test** y habilita el modo **Development** en la parte superior derecha.
+4. Utiliza el simulador de texto o voz para lanzar el skill (`"Alexa, abre Synian Assistant"`) y probar los intents (`"¿Cuál es el estado de Synian?"`, `"Pregunta a Synian qué novedades hay"`). Las respuestas deben coincidir con lo obtenido mediante `npm run local-test`, ya que ambas provienen del backend Synian accesible desde `https://api.synian.app`.
+
+## Conexión con un dispositivo físico Alexa
+
+1. Abre la aplicación móvil **Amazon Alexa** con la misma cuenta desarrolladora.
+2. Ve a **Más → Skills y juegos → Tus Skills → Desarrollo** y habilita *Synian Assistant*.
+3. Asegúrate de que el dispositivo Alexa esté asociado a dicha cuenta. Puedes comprobarlo en **Dispositivos → Echo y Alexa**.
+4. Invoca el skill desde el dispositivo físico con los mismos comandos utilizados en el simulador. El dispositivo usará el modelo y backend desplegados mediante `ask deploy`, por lo que escucharás las respuestas generadas por Synian en tiempo real.
+
+## Recursos adicionales
+
+* [Documentación de ASK SDK para Node.js](https://www.npmjs.com/package/ask-sdk-core)
+* [Documentación oficial de ASK](https://developer.amazon.com/docs)
