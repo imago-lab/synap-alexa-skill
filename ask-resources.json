@@ -3,18 +3,20 @@
   "profiles": {
     "default": {
       "skillMetadata": {
-        "src": "."
+        "src": "./"
       },
       "code": {
         "default": {
-          "src": "lambda/custom"
+          "src": "./lambda"
         }
       },
       "skillInfrastructure": {
         "type": "@ask-cli/cfn-deployer",
         "userConfig": {
           "runtime": "nodejs18.x",
-          "handler": "index.handler"
+          "handler": "index.handler",
+          "templatePath": "./infrastructure/cfn-deployer/skill-stack.yaml",
+          "awsRegion": "us-east-1"
         }
       }
     }

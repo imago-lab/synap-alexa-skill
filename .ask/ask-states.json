@@ -2,7 +2,17 @@
   "askcliStatesVersion": "2020-03-31",
   "profiles": {
     "default": {
-      "deploymentStatus": "IN_PROGRESS"
+      "skillId": "",
+      "skillInfrastructure": {
+        "@ask-cli/cfn-deployer": {
+          "deployState": {}
+        }
+      },
+      "deploymentStatus": "COMPLETE",
+      "skillMetadata": {
+        "lastImportId": "amzn1.ask-package.import.27350fe3-bc9f-424d-95e6-1bfd31f63b8f",
+        "lastImportTimestamp": "2025-10-10T21:43:08.597Z"
+      }
     }
   }
 }

@@ -14,7 +14,7 @@
           ],
           "keywords": ["Synian", "Asistente", "IA"]
         },
-        "es-PE": {
+        "es-MX": {
           "name": "Synian Assistant",
           "summary": "Asistente virtual de Synian para información y consultas.",
           "description": "Synian Assistant te conecta con los servicios de Synian para consultar el estado de la plataforma y obtener respuestas generadas por Synian Core.",
