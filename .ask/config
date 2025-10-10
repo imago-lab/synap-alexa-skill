@@ -1,9 +1,17 @@
 {
   "deploy_settings": {
     "default": {
-      "skill_id": "",
+      "skill_id": "amzn1.ask.skill.synian-assistant",
       "was_cloned": false,
-      "merge": {}
+      "merge": {},
+      "skill_metadata": {
+        "src": "skill.json"
+      },
+      "code": {
+        "default": {
+          "src": "lambda/custom"
+        }
+      }
     }
   }
 }
