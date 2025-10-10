@@ -12,11 +12,7 @@
             "Alexa, pregunta a Synian por el estado",
             "Alexa, dile a Synian que responda"
           ],
-          "keywords": [
-            "Synian",
-            "Asistente",
-            "IA"
-          ]
+          "keywords": ["Synian", "Asistente", "IA"]
         },
         "es-MX": {
           "name": "Synian Assistant",
@@ -27,11 +23,7 @@
             "Alexa, pregunta a Synian cómo está el sistema",
             "Alexa, dile a Synian que necesito ayuda"
           ],
-          "keywords": [
-            "Synian",
-            "Asistente",
-            "IA"
-          ]
+          "keywords": ["Synian", "Asistente", "IA"]
         }
       },
       "isAvailableWorldwide": false,
