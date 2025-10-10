@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"No hay pruebas definidas\" && exit 0",
     "lint": "echo \"No hay reglas de lint configuradas\"",
-    "deploy": "ask deploy"
+    "local-test": "node testSkill.js",
+    "deploy": "ask deploy --env development"
   },
   "author": "Synian",
   "license": "SEE LICENSE IN LICENSE.txt",
