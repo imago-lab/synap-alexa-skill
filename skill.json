@@ -1,185 +1,60 @@
 {
-    "manifest": {
-        "publishingInformation": {
-            "locales": {
-                "en-US": {
-                    "name": "Hello World",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa open hello world",
-                        "hello",
-                        "help"
-                    ],
-                    "keywords": []
-                },
-                "en-GB": {
-                    "name": "Hello World",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa open hello world",
-                        "hello",
-                        "help"
-                    ],
-                    "keywords": []
-                },
-                "en-CA": {
-                    "name": "Hello World",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa open hello world",
-                        "hello",
-                        "help"
-                    ],
-                    "keywords": []
-                },
-                "en-IN": {
-                    "name": "Hello World",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa open hello world",
-                        "hello",
-                        "help"
-                    ],
-                    "keywords": []
-                },
-                "en-AU": {
-                    "name": "Hello World",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa open hello world",
-                        "hello",
-                        "help"
-                    ],
-                    "keywords": []
-                },
-                "es-ES": {
-                    "name": "Hola Mundo",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa abre hola mundo",
-                        "hola",
-                        "ayuda"
-                    ],
-                    "keywords": []
-                },
-                "es-MX": {
-                    "name": "Hola Mundo",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa abre hola mundo",
-                        "hola",
-                        "ayuda"
-                    ],
-                    "keywords": []
-                },
-                "es-US": {
-                    "name": "Hola Mundo",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa abre hola mundo",
-                        "hola",
-                        "ayuda"
-                    ],
-                    "keywords": []
-                },
-                "fr-FR": {
-                    "name": "Le Génie des Salutations",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa ouvre le génie des salutations",
-                        "bonjour",
-                        "aide"
-                    ],
-                    "keywords": []
-                },
-                "fr-CA": {
-                    "name": "Le Génie des Salutations",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa ouvre le génie des salutations",
-                        "bonjour",
-                        "aide"
-                    ],
-                    "keywords": []
-                },
-                "ja-JP": {
-                    "name": "ハローワールド",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "アレクサ、ハローワールドを開いて",
-                        "こんにちは",
-                        "ヘルプ"
-                    ],
-                    "keywords": []
-                },
-                "de-DE": {
-                    "name": "Hallo Welt",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa öffne hallo welt",
-                        "hallo",
-                        "hilfe"
-                    ],
-                    "keywords": []
-                },
-                "it-IT": {
-                    "name": "Ciao Mondo",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa apri ciao mondo",
-                        "ciao",
-                        "aiuto"
-                    ],
-                    "keywords": []
-                },
-                "hi-IN": {
-                    "name": "नमस्ते दुनिया",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa मज़ेदार नमस्ते दुनिया",
-                        "hello",
-                        "मदद करो"
-                    ],
-                    "keywords": []
-                },
-                "pt-BR": {
-                    "name": "Olá Mundo",
-                    "summary": "Sample Short Description",
-                    "description": "Sample Full Description",
-                    "examplePhrases": [
-                        "Alexa abra olá mundo",
-                        "olá",
-                        "ajuda"
-                    ],
-                    "keywords": []
-                }
-            },
-            "isAvailableWorldwide": true,
-            "testingInstructions": "Sample Testing Instructions",
-            "distributionCountries": []
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-PE": {
+          "name": "Synian Assistant",
+          "summary": "Asistente virtual de Synian para información y consultas.",
+          "description": "Synian Assistant te conecta con los servicios de Synian para consultar el estado de la plataforma y obtener respuestas generadas por Synian Core.",
+          "examplePhrases": [
+            "Alexa, abre Synian Assistant",
+            "Alexa, pregunta a Synian cómo está el sistema",
+            "Alexa, dile a Synian que necesito ayuda"
+          ],
+          "keywords": [
+            "Synian",
+            "Asistente",
+            "IA"
+          ]
         },
-        "apis": {
-            "custom": {
-                "endpoint": {
-                    "sourceDir": "lambda/custom",
-                    "uri": "ask-custom-helloworld-default"
-                }
-            }
-        },
-        "manifestVersion": "1.0"
+        "es-ES": {
+          "name": "Synian Assistant",
+          "summary": "Asistente virtual de Synian para información y consultas.",
+          "description": "Synian Assistant te conecta con los servicios de Synian para consultar el estado de la plataforma y obtener respuestas generadas por Synian Core.",
+          "examplePhrases": [
+            "Alexa, abre Synian Assistant",
+            "Alexa, pregunta a Synian por el estado",
+            "Alexa, dile a Synian que responda"
+          ],
+          "keywords": [
+            "Synian",
+            "Asistente",
+            "IA"
+          ]
+        }
+      },
+      "distributionCountries": [
+        "PE",
+        "ES"
+      ],
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Prueba las intenciones de estado y consulta enviando peticiones a la API de Synian."
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sourceDir": "lambda/custom",
+          "uri": "arn:aws:lambda:us-east-1:123456789012:function:SynianAssistantDev"
+        }
+      }
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false
     }
+  }
 }
