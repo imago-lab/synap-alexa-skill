@@ -1,40 +1,119 @@
-/* *
- * This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK (v2).
- * Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
- * session persistence, api calls, and more.
- * */
 const Alexa = require('ask-sdk-core');
-// i18n library dependency, we use it below in a localisation interceptor
-const i18n = require('i18next');
-// i18n strings for all supported locales
-const languageStrings = require('./languageStrings');
+const axios = require('axios');
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const speakOutput = handlerInput.t('WELCOME_MSG');
+        console.info('LaunchRequest received');
+        const speakOutput = 'Hola, soy Synian. ¿En qué puedo ayudarte hoy?';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(speakOutput)
+            .reprompt('¿En qué puedo ayudarte hoy?')
             .getResponse();
     }
 };
 
-const HelloWorldIntentHandler = {
+const GetStatusIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'HelloWorldIntent';
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'GetStatusIntent';
     },
-    handle(handlerInput) {
-        const speakOutput = handlerInput.t('HELLO_MSG');
+    async handle(handlerInput) {
+        console.info('GetStatusIntent received');
 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
-            .getResponse();
+        try {
+            const response = await axios.get('https://api.synian.app/status');
+            console.info('Status API response', response.data);
+
+            let statusMessage;
+            if (response && response.data) {
+                if (typeof response.data === 'string') {
+                    statusMessage = response.data;
+                } else if (response.data.message) {
+                    statusMessage = response.data.message;
+                } else if (response.data.status) {
+                    statusMessage = response.data.status;
+                }
+            }
+
+            const speakOutput = statusMessage
+                ? `El estado actual de Synian es: ${statusMessage}.`
+                : 'Synian está operativo en este momento.';
+
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt('¿Necesitas algo más?')
+                .getResponse();
+        } catch (error) {
+            console.error('Error retrieving status', error);
+            const speakOutput = 'Lo siento, no puedo obtener el estado de Synian en este momento. ¿Quieres intentar de nuevo más tarde?';
+
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt('¿Quieres intentar otra cosa?')
+                .getResponse();
+        }
+    }
+};
+
+const QueryIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'QueryIntent';
+    },
+    async handle(handlerInput) {
+        console.info('QueryIntent received');
+        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
+        const request = handlerInput.requestEnvelope.request;
+        const userInput = request.intent && request.intent.slots && request.intent.slots.QueryText
+            ? request.intent.slots.QueryText.value
+            : undefined;
+
+        if (!userInput) {
+            console.info('QueryIntent invoked without QueryText slot');
+            const speakOutput = 'No escuché tu consulta. ¿Podrías repetirla?';
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt('¿Qué deseas preguntar a Synian?')
+                .getResponse();
+        }
+
+        try {
+            const response = await axios.post('https://api.synian.app/alexa-query', {
+                query: userInput,
+                locale
+            });
+            console.info('Query API response', response.data);
+
+            let answer;
+            if (response && response.data) {
+                if (typeof response.data === 'string') {
+                    answer = response.data;
+                } else if (response.data.answer) {
+                    answer = response.data.answer;
+                } else if (response.data.message) {
+                    answer = response.data.message;
+                }
+            }
+
+            const speakOutput = answer || 'Synian no tiene una respuesta en este momento.';
+
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt('¿Hay algo más en lo que pueda ayudarte?')
+                .getResponse();
+        } catch (error) {
+            console.error('Error invoking Synian Core', error);
+            const speakOutput = 'Ocurrió un problema al comunicarme con Synian. ¿Quieres intentar de nuevo?';
+
+            return handlerInput.responseBuilder
+                .speak(speakOutput)
+                .reprompt('¿Quieres intentar algo diferente?')
+                .getResponse();
+        }
     }
 };
 
@@ -44,11 +123,12 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = handlerInput.t('HELP_MSG');
+        console.info('HelpIntent received');
+        const speakOutput = 'Puedes preguntarme por el estado de Synian o pedirle a Synian que responda tus consultas. ¿Qué deseas hacer?';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(speakOutput)
+            .reprompt('¿Qué deseas hacer?')
             .getResponse();
     }
 };
@@ -60,114 +140,63 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     handle(handlerInput) {
-        const speakOutput = handlerInput.t('GOODBYE_MSG');
-
+        console.info('Cancel or Stop intent received');
         return handlerInput.responseBuilder
-            .speak(speakOutput)
+            .speak('Hasta luego.')
             .getResponse();
     }
 };
-/* *
- * FallbackIntent triggers when a customer says something that doesn’t map to any intents in your skill
- * It must also be defined in the language model (if the locale supports it)
- * This handler can be safely added but will be ingnored in locales that do not support it yet 
- * */
-const FallbackIntentHandler = {
-    canHandle(handlerInput) {
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.FallbackIntent';
-    },
-    handle(handlerInput) {
-        const speakOutput = handlerInput.t('FALLBACK_MSG');
 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .reprompt(speakOutput)
-            .getResponse();
-    }
-};
-/* *
- * SessionEndedRequest notifies that a session was ended. This handler will be triggered when a currently open 
- * session is closed for one of the following reasons: 1) The user says "exit" or "quit". 2) The user does not 
- * respond or says something that does not match an intent defined in your voice model. 3) An error occurs 
- * */
 const SessionEndedRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'SessionEndedRequest';
     },
     handle(handlerInput) {
-        console.log(`~~~~ Session ended: ${JSON.stringify(handlerInput.requestEnvelope)}`);
-        // Any cleanup logic goes here.
-        return handlerInput.responseBuilder.getResponse(); // notice we send an empty response
+        console.info('Session ended', handlerInput.requestEnvelope);
+        return handlerInput.responseBuilder.getResponse();
     }
 };
-/* *
- * The intent reflector is used for interaction model testing and debugging.
- * It will simply repeat the intent the user said. You can create custom handlers for your intents 
- * by defining them above, then also adding them to the request handler chain below 
- * */
+
 const IntentReflectorHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest';
     },
     handle(handlerInput) {
         const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-        const speakOutput = handlerInput.t('REFLECTOR_MSG', {intentName: intentName});
+        console.info(`IntentReflector handling intent: ${intentName}`);
+        const speakOutput = `Acabas de activar ${intentName}.`;
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
             .getResponse();
     }
 };
-/**
- * Generic error handling to capture any syntax or routing errors. If you receive an error
- * stating the request handler chain is not found, you have not implemented a handler for
- * the intent being invoked or included it in the skill builder below 
- * */
+
 const ErrorHandler = {
     canHandle() {
         return true;
     },
     handle(handlerInput, error) {
-        const speakOutput = handlerInput.t('ERROR_MSG');
-        console.log(`~~~~ Error handled: ${JSON.stringify(error.stack)}`);
+        console.error('Global error handler invoked', error);
+        const speakOutput = 'Lo siento, ocurrió un error. Intenta de nuevo.';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(speakOutput)
+            .reprompt('¿Puedes intentarlo de nuevo?')
             .getResponse();
     }
 };
 
-// This request interceptor will bind a translation function 't' to the handlerInput
-const LocalisationRequestInterceptor = {
-    process(handlerInput) {
-        i18n.init({
-            lng: Alexa.getLocale(handlerInput.requestEnvelope),
-            resources: languageStrings
-        }).then((t) => {
-            handlerInput.t = (...args) => t(...args);
-        });
-    }
-};
-/**
- * This handler acts as the entry point for your skill, routing all request and response
- * payloads to the handlers above. Make sure any new handlers or interceptors you've
- * defined are included below. The order matters - they're processed top to bottom 
- * */
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
-        HelloWorldIntentHandler,
+        GetStatusIntentHandler,
+        QueryIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
-        FallbackIntentHandler,
         SessionEndedRequestHandler,
-        IntentReflectorHandler)
-    .addErrorHandlers(
-        ErrorHandler)
-    .addRequestInterceptors(
-        LocalisationRequestInterceptor)
-    .withCustomUserAgent('sample/hello-world/v1.2')
+        IntentReflectorHandler
+    )
+    .addErrorHandlers(ErrorHandler)
+    .withCustomUserAgent('synian-assistant/v1.0')
     .lambda();
