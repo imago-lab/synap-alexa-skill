@@ -10,7 +10,7 @@
           "examplePhrases": [
             "Alexa, abre Synian Assistant",
             "Alexa, pregunta a Synian cómo está el sistema",
-            "Alexa, dile a Synian que necesito ayuda"
+            "Alexa, dile a Synian que responda"
           ],
           "keywords": ["Synian", "Asistente", "IA"]
         },
@@ -33,8 +33,8 @@
     "apis": {
       "custom": {
         "endpoint": {
-  "uri": "ask-custom-SynianAssistant-default"
-}
+          "uri": "ask-custom-SynianAssistant-default"
+        }
       }
     },
     "privacyAndCompliance": {
