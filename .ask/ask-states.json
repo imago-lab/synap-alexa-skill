@@ -2,16 +2,19 @@
   "askcliStatesVersion": "2020-03-31",
   "profiles": {
     "default": {
-      "skillId": "",
+      "skillId": "amzn1.ask.skill.71cdea3f-d0f4-4992-95a8-1b07aa2fddbf",
       "skillInfrastructure": {
         "@ask-cli/cfn-deployer": {
-          "deployState": {}
+          "deployState": {
+            "default": {}
+          }
         }
       },
       "deploymentStatus": "COMPLETE",
       "skillMetadata": {
-        "lastImportId": "amzn1.ask-package.import.15789108-8ec8-44ad-804e-9de651fcaa76",
-        "lastImportTimestamp": "2025-10-10T21:53:38.457Z"
+        "lastImportId": "amzn1.ask-package.import.f0ee1924-bd39-4b0d-8688-e6779d02be2f",
+        "lastImportTimestamp": "2025-10-10T22:03:29.679Z",
+        "lastDeployHash": "oYxR0jY+l+eNUJT3Wc1AGyYq5pI="
       }
     }
   }

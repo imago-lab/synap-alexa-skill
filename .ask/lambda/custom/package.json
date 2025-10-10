@@ -1,0 +1,21 @@
+{
+  "name": "synian-assistant",
+  "version": "1.0.0",
+  "description": "Synian Assistant Alexa Skill",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No hay pruebas definidas\" && exit 0",
+    "lint": "echo \"No hay reglas de lint configuradas\"",
+    "local-test": "node ../testSkill.js",
+    "deploy": "ask deploy"
+  },
+  "author": "Synian",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "dependencies": {
+    "ask-sdk-core": "^2.12.1",
+    "ask-sdk-model": "^1.43.0",
+    "aws-sdk": "^2.326.0",
+    "axios": "^1.6.8",
+    "i18next": "^15.0.5"
+  }
+}

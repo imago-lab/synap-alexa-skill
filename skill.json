@@ -33,7 +33,7 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "ask-custom-SynianAssistant-default"
+          "uri": "https://example.com"
         }
       }
     },
