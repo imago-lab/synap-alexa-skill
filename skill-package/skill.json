@@ -1,0 +1,45 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-ES": {
+          "name": "Synian Assistant",
+          "summary": "Asistente virtual de Synian para información y consultas.",
+          "description": "Synian Assistant te conecta con los servicios de Synian para consultar el estado de la plataforma y obtener respuestas generadas por Synian Core.",
+          "examplePhrases": [
+            "Alexa, abre Synian Assistant",
+            "Alexa, pregunta a Synian cómo está el sistema",
+            "Alexa, dile a Synian que responda"
+          ],
+          "keywords": [
+            "Synian",
+            "Asistente",
+            "IA"
+          ]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "distributionCountries": [
+        "ES",
+        "MX",
+        "PE"
+      ],
+      "testingInstructions": "Prueba las intenciones de estado y consulta enviando peticiones a la API de Synian."
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:620089792586:function:ask-SynianAssistant-default-ski-AlexaSkillFunction-oB7kKReubjhb"
+        }
+      }
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false
+    }
+  }
+}

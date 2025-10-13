@@ -1,0 +1,10 @@
+# Ignorar la carpeta de dependencias de la Lambda
+lambda/custom/node_modules
+
+# Ignorar la carpeta de trabajo de la herramienta ASK
+.ask/
+
+# Ignorar archivos temporales y de versionado
+.git/
+*.zip
+.DS_Store

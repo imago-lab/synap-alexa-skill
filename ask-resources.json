@@ -3,11 +3,14 @@
   "profiles": {
     "default": {
       "skillMetadata": {
-        "src": "./"
+        "src": "skill-package",
+        "eTag": null,
+        "lastDeployHash": null
       },
       "code": {
         "default": {
-          "src": "./lambda"
+          "src": "./lambda",
+          "build": "npm install"
         }
       },
       "skillInfrastructure": {
@@ -18,7 +21,8 @@
           "templatePath": "./infrastructure/cfn-deployer/skill-stack.yaml",
           "awsRegion": "us-east-1"
         }
-      }
+      },
+      "skillId": "amzn1.ask.skill.31e5c00d-f874-4e05-afa6-ad146c01e41c"
     }
   }
 }

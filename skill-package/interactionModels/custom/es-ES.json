@@ -1,0 +1,88 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "synian assistant",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "HelloWorldIntent",
+          "slots": [],
+          "samples": [
+            "hola",
+            "hola mundo",
+            "dime hola",
+            "salúdame"
+          ]
+        },
+        {
+          "name": "ConversacionIntent",
+          "slots": [
+            {
+              "name": "texto",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "pregunta a Synian {texto}",
+            "dile a Synian {texto}",
+            "consulta con Synian sobre {texto}",
+            "quiero saber sobre {texto}",
+            "háblame de {texto}",
+            "infórmame sobre {texto}",
+            "Synian dime {texto}",
+            "Synian explícame {texto}"
+          ]
+        },
+        {
+          "name": "ActivarModoSynianIntent",
+          "slots": [],
+          "samples": [
+            "activa modo Synian",
+            "activar modo Synian",
+            "entra en modo Synian",
+            "cambia a modo Synian",
+            "modo Synian",
+            "pon modo Synian",
+            "habilita modo Synian",
+            "conéctame con Synian",
+            "quiero hablar con Synian",
+            "inicia modo Synian"
+          ]
+        },
+        {
+          "name": "ClaveModoSynianIntent",
+          "slots": [
+            {
+              "name": "clave",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "la clave es {clave}",
+            "mi clave es {clave}",
+            "el código es {clave}",
+            "usa la clave {clave}",
+            "ingreso clave {clave}",
+            "introduzco la clave {clave}",
+            "digito {clave}",
+            "mi código es {clave}",
+            "coloco la clave {clave}",
+            "clave {clave}"
+          ]
+        }
+      ],
+      "types": []
+    }
+  }
+}

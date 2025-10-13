@@ -2,19 +2,38 @@
   "askcliStatesVersion": "2020-03-31",
   "profiles": {
     "default": {
-      "skillId": "amzn1.ask.skill.71cdea3f-d0f4-4992-95a8-1b07aa2fddbf",
+      "skillId": "amzn1.ask.skill.31e5c00d-f874-4e05-afa6-ad146c01e41c",
       "skillInfrastructure": {
         "@ask-cli/cfn-deployer": {
           "deployState": {
-            "default": {}
+            "default": {
+              "s3": {
+                "bucket": "ask-synap-alexa-skill-default-useast1-1760379810494",
+                "key": "endpoint/build.zip"
+              },
+              "stackId": "arn:aws:cloudformation:us-east-1:620089792586:stack/ask-SynianAssistant-default-skillStack-1760379810494/b9252a00-a861-11f0-99a7-0e25984a9e07",
+              "outputs": [
+                {
+                  "OutputKey": "SkillEndpoint",
+                  "OutputValue": "arn:aws:lambda:us-east-1:620089792586:function:ask-SynianAssistant-default-ski-AlexaSkillFunction-oB7kKReubjhb",
+                  "Description": "LambdaARN for the regional endpoint"
+                }
+              ]
+            }
           }
         }
       },
       "deploymentStatus": "COMPLETE",
       "skillMetadata": {
-        "lastImportId": "amzn1.ask-package.import.f0ee1924-bd39-4b0d-8688-e6779d02be2f",
-        "lastImportTimestamp": "2025-10-10T22:03:29.679Z",
-        "lastDeployHash": "oYxR0jY+l+eNUJT3Wc1AGyYq5pI="
+        "lastImportId": "amzn1.ask-package.import.326bce79-e72a-4ddb-91ad-92df2146a512",
+        "lastImportTimestamp": "2025-10-11T15:14:02.745Z",
+        "lastDeployHash": "E2csSwxAUanR6Rp8xFc/K8jbmzw=",
+        "lastDeployType": "interaction-model"
+      },
+      "code": {
+        "default": {
+          "lastDeployHash": "ktv3qULqL6UK1Wyg2ZSdov1suPg="
+        }
       }
     }
   }
