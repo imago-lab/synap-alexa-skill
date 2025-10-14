@@ -27,12 +27,12 @@
       "skillMetadata": {
         "lastImportId": "amzn1.ask-package.import.326bce79-e72a-4ddb-91ad-92df2146a512",
         "lastImportTimestamp": "2025-10-11T15:14:02.745Z",
-        "lastDeployHash": "E2csSwxAUanR6Rp8xFc/K8jbmzw=",
+        "lastDeployHash": "B9yvWwM6hIHOjwuzKS83p582p+0=",
         "lastDeployType": "interaction-model"
       },
       "code": {
         "default": {
-          "lastDeployHash": "ktv3qULqL6UK1Wyg2ZSdov1suPg="
+          "lastDeployHash": "Jx6SrgWuKggkV41vN5qQ04RxkaQ="
         }
       }
     }

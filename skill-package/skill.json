@@ -3,29 +3,45 @@
     "manifestVersion": "1.0",
     "publishingInformation": {
       "locales": {
-        "es-ES": {
-          "name": "Synian Assistant",
-          "summary": "Asistente virtual de Synian para información y consultas.",
-          "description": "Synian Assistant te conecta con los servicios de Synian para consultar el estado de la plataforma y obtener respuestas generadas por Synian Core.",
+        "es-MX": {
+          "name": "Modo Synian",
+          "summary": "Activa Modo Synian, tu asistente inteligente con voz natural mexicana.",
+          "description": "Synian es una inteligencia avanzada desarrollada por Imago Lab. Te permite interactuar con una IA conversacional a través de Alexa, con respuestas naturales y personalizadas en español mexicano.",
           "examplePhrases": [
-            "Alexa, abre Synian Assistant",
-            "Alexa, pregunta a Synian cómo está el sistema",
-            "Alexa, dile a Synian que responda"
+            "Alexa, abre modo Synian",
+            "Alexa, inicia modo Synian",
+            "Alexa, conéctame con Synian"
           ],
           "keywords": [
             "Synian",
-            "Asistente",
-            "IA"
+            "IA",
+            "asistente inteligente",
+            "modo Synian"
+          ]
+        },
+        "es-ES": {
+          "name": "Modo Synian",
+          "summary": "Activa Modo Synian, tu asistente inteligente con voz natural.",
+          "description": "Synian es una inteligencia avanzada desarrollada por Imago Lab. Este asistente te permite interactuar con una IA conversacional en español de manera fluida y personalizada.",
+          "examplePhrases": [
+            "Alexa, abre modo Synian",
+            "Alexa, inicia modo Synian",
+            "Alexa, conéctame con Synian"
+          ],
+          "keywords": [
+            "Synian",
+            "IA",
+            "asistente inteligente"
           ]
         }
       },
       "isAvailableWorldwide": false,
       "distributionCountries": [
-        "ES",
         "MX",
-        "PE"
+        "ES"
       ],
-      "testingInstructions": "Prueba las intenciones de estado y consulta enviando peticiones a la API de Synian."
+      "testingInstructions": "Prueba los comandos 'abre modo Synian', 'inicia modo Synian' o 'modo Synian 123456'. La activación requiere validar la clave enviada al Synian Core.",
+      "category": "KNOWLEDGE_AND_TRIVIA"
     },
     "apis": {
       "custom": {

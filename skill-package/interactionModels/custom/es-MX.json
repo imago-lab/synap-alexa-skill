@@ -42,17 +42,11 @@
         },
         {
           "name": "ConversacionIntent",
-          "slots": [
-            {
-              "name": "texto",
-              "type": "AMAZON.SearchQuery"
-            }
-          ],
           "samples": [
-            "pregunta a synian {texto}",
-            "dile a synian {texto}",
-            "consulta con synian {texto}",
-            "synian {texto}"
+            "pregunta a synian",
+            "dile a synian",
+            "consulta con synian",
+            "habla con synian"
           ]
         },
         {
