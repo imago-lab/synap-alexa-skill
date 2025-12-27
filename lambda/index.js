@@ -16,7 +16,6 @@ const USER_ID = process.env.USER_ID || '00000000-0000-0000-0000-000000000000';
 // 🧠 Funciones de utilidad
 // ===================================================
 
-// Locale de Alexa antes de autenticación (solo referencia)
 const getRequestLocale = (handlerInput) =>
   handlerInput.requestEnvelope.request.locale || 'es-MX';
 
@@ -27,21 +26,36 @@ const setSessionAttributes = (handlerInput, attributes) => {
   handlerInput.attributesManager.setSessionAttributes(attributes);
 };
 
-// El estado real vive en Synian Core; aquí solo guardamos datos efímeros de sesión
 const clearSynianSession = (handlerInput) => {
-  const attributes = getSessionAttributes(handlerInput);
-  delete attributes.synian;
-  delete attributes.authAttempts;
-  setSessionAttributes(handlerInput, attributes);
+  setSessionAttributes(handlerInput, {});
 };
 
-const isSynianSessionActive = (handlerInput) => {
+const isAuthenticated = (handlerInput) => {
   const attributes = getSessionAttributes(handlerInput);
-  return Boolean(attributes.synian?.sessionId);
+  return attributes.authStatus === 'authenticated' && Boolean(attributes.sessionId);
 };
 
-// Una voz oficial por idioma de Synian (no por usuario)
-const resolveVoiceByLanguage = (language) => {
+const resolveLanguage = (handlerInput) => {
+  const locale = getRequestLocale(handlerInput);
+  const localeLower = locale.toLowerCase();
+
+  if (localeLower.startsWith('es-')) {
+    const normalized = localeLower === 'es-mx' ? 'es-MX' : 'es-ES';
+    return { languageCode: normalized, ssmlLang: normalized, defaultVoice: normalized };
+  }
+
+  if (localeLower.startsWith('en-')) {
+    return { languageCode: 'en-US', ssmlLang: 'en-US', defaultVoice: 'en-US' };
+  }
+
+  if (localeLower.startsWith('pt-')) {
+    return { languageCode: 'pt-BR', ssmlLang: 'pt-BR', defaultVoice: 'pt-BR' };
+  }
+
+  return { languageCode: 'es-ES', ssmlLang: 'es-ES', defaultVoice: 'es-ES' };
+};
+
+const resolveVoiceByLanguage = (languageCode) => {
   const voices = {
     'es-MX': { name: 'Andrés', locale: 'es-MX' },
     'es-ES': { name: 'Sergio', locale: 'es-ES' },
@@ -49,19 +63,23 @@ const resolveVoiceByLanguage = (language) => {
     'pt-BR': { name: 'Ricardo', locale: 'pt-BR' }
   };
 
-  return voices[language] || voices['es-MX'];
+  return voices[languageCode] || voices['es-ES'];
 };
 
-const buildAlexaSSML = (text, locale) => `<speak>
-  <lang xml:lang="${locale}">
+const buildAlexaSpeech = (text, handlerInput) => {
+  const { ssmlLang } = resolveLanguage(handlerInput);
+  return `<speak>
+  <lang xml:lang="${ssmlLang}">
     ${text}
   </lang>
 </speak>`;
+};
 
-const buildSynianSSML = (text, language) => {
-  const voice = resolveVoiceByLanguage(language);
+const buildSynianSpeech = (text, handlerInput) => {
+  const { defaultVoice, ssmlLang } = resolveLanguage(handlerInput);
+  const voice = resolveVoiceByLanguage(defaultVoice);
   return `<speak>
-    <lang xml:lang="${voice.locale}">
+    <lang xml:lang="${ssmlLang}">
       <voice name="${voice.name}">
         <prosody rate="95%" pitch="+1%">
           ${text}
@@ -84,10 +102,6 @@ const buildCoreContext = (handlerInput, sessionId) => {
   };
 };
 
-const isSessionExpiredResponse = (data) =>
-  data?.status === 'SESSION_EXPIRED' ||
-  data?.error?.code === 'SESSION_EXPIRED';
-
 const requestSynianCore = async (payload) => {
   const response = await axios.post(SYNIAN_CORE_API, payload);
   return response.data;
@@ -98,8 +112,6 @@ const requestSynianCore = async (payload) => {
 // ===================================================
 
 async function validateCode(code, handlerInput) {
-  const attributes = getSessionAttributes(handlerInput);
-  const attempts = attributes.authAttempts || 0;
   try {
     const payload = {
       prompt: '__auth_synian_mode__',
@@ -112,48 +124,33 @@ async function validateCode(code, handlerInput) {
 
     // Si la autenticación es correcta
     if (data.status === 'OK') {
-      const synianSession = {
-        sessionId: data.sessionId,
-        language: data.language || getRequestLocale(handlerInput),
-        preferredName: data.preferredName || ''
-      };
       setSessionAttributes(handlerInput, {
-        ...attributes,
-        synian: synianSession,
-        authAttempts: 0
+        authStatus: 'authenticated',
+        sessionId: data.sessionId,
+        expiresAt: data.expiresAt || null
       });
 
+      const preferredName = data.preferredName ? data.preferredName.trim() : '';
+      const greetingName = preferredName ? `Hola ${preferredName},` : 'Hola,';
       const saludo =
         data.reply ||
-        `Autenticación verificada. Hola ${synianSession.preferredName || ''}, te saluda Synian.`;
-      const speakOutput = buildSynianSSML(saludo.trim(), synianSession.language);
+        `Autenticación verificada. ${greetingName} te saluda Synian.`;
+      const speakOutput = buildSynianSpeech(saludo.trim(), handlerInput);
       return handlerInput.responseBuilder.speak(speakOutput).getResponse();
     }
 
     // Si la autenticación falla
-    const nextAttempts = attempts + 1;
-    setSessionAttributes(handlerInput, { ...attributes, authAttempts: nextAttempts });
-
-    const locale = getRequestLocale(handlerInput);
-    if (nextAttempts >= 3) {
-      clearSynianSession(handlerInput);
-      const speakOutput = buildAlexaSSML(
-        'Clave incorrecta tres veces. Por seguridad, vuelve a iniciar el modo Synian.',
-        locale
-      );
-      return handlerInput.responseBuilder.speak(speakOutput).getResponse();
-    }
-
-    const speakOutput = buildAlexaSSML(
-      'Clave incorrecta. Vuelve a intentarlo, por favor.',
-      locale
+    setSessionAttributes(handlerInput, { authStatus: 'unauthenticated' });
+    const speakOutput = buildAlexaSpeech(
+      'No pude validar el código. Inténtalo de nuevo, por favor.',
+      handlerInput
     );
     return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
   } catch (err) {
     console.error('Error conectando con Synian Core:', err.message);
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Hubo un problema al conectar con el sistema central.',
-      getRequestLocale(handlerInput)
+      handlerInput
     );
     return handlerInput.responseBuilder.speak(speakOutput).getResponse();
   }
@@ -167,9 +164,9 @@ async function validateCode(code, handlerInput) {
 const LaunchRequestHandler = {
   canHandle: (input) => Alexa.getRequestType(input.requestEnvelope) === 'LaunchRequest',
   handle: (input) => {
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Hola, soy Alexa, intérprete de Synian. Puedes decir “modo Synian” o “activar modo Synian”.',
-      getRequestLocale(input)
+      input
     );
     return input.responseBuilder.speak(speakOutput).reprompt('¿Deseas activar el modo Synian?').getResponse();
   }
@@ -184,9 +181,10 @@ const ActivateSynianIntentHandler = {
     const codeSlot = handlerInput.requestEnvelope.request.intent.slots?.clave?.value;
 
     if (!codeSlot) {
-      const speakOutput = buildAlexaSSML(
+      setSessionAttributes(handlerInput, { authStatus: 'unauthenticated' });
+      const speakOutput = buildAlexaSpeech(
         'Por favor, dime el código TOTP para activar modo Synian.',
-        getRequestLocale(handlerInput)
+        handlerInput
       );
       return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
     }
@@ -203,9 +201,10 @@ const ProvideCodeIntentHandler = {
   async handle(handlerInput) {
     const code = handlerInput.requestEnvelope.request.intent.slots?.clave?.value;
     if (!code) {
-      const speakOutput = buildAlexaSSML(
+      setSessionAttributes(handlerInput, { authStatus: 'unauthenticated' });
+      const speakOutput = buildAlexaSpeech(
         'No entendí el código. Por favor repítelo número por número.',
-        getRequestLocale(handlerInput)
+        handlerInput
       );
       return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
     }
@@ -216,41 +215,39 @@ const ProvideCodeIntentHandler = {
 // Conversación activa con Synian Core
 const ConversacionIntentHandler = {
   canHandle: (input) =>
-    isSynianSessionActive(input) &&
     Alexa.getRequestType(input.requestEnvelope) === 'IntentRequest' &&
     input.requestEnvelope.request.intent.name === 'ConversacionIntent',
   async handle(handlerInput) {
+    if (!isAuthenticated(handlerInput)) {
+      setSessionAttributes(handlerInput, { authStatus: 'unauthenticated' });
+      const speakOutput = buildAlexaSpeech(
+        'Para continuar necesito autenticarte. Dime “modo Synian”.',
+        handlerInput
+      );
+      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+    }
+
     const texto = handlerInput.requestEnvelope.request.intent.slots?.texto?.value || '';
     const attributes = getSessionAttributes(handlerInput);
-    const synianSession = attributes.synian || {};
     try {
       const response = await requestSynianCore({
         prompt: texto,
         origin: 'alexa',
         context: {
-          ...buildCoreContext(handlerInput, synianSession.sessionId),
+          ...buildCoreContext(handlerInput, attributes.sessionId),
           mode: 'synian'
         }
       });
 
-      if (isSessionExpiredResponse(response)) {
-        clearSynianSession(handlerInput);
-        const speakOutput = buildAlexaSSML(
-          'Tu sesión de Synian expiró. Por favor, vuelve a decir “modo Synian” para autenticarte.',
-          getRequestLocale(handlerInput)
-        );
-        return handlerInput.responseBuilder.speak(speakOutput).getResponse();
-      }
-
       const reply = response.reply || 'Synian no ha respondido.';
-      const speakOutput = buildSynianSSML(reply, synianSession.language);
+      const speakOutput = buildSynianSpeech(reply, handlerInput);
 
       return handlerInput.responseBuilder.speak(speakOutput).getResponse();
     } catch (err) {
       console.error('Error comunicando con Synian Core:', err.message);
-      const speakOutput = buildSynianSSML(
+      const speakOutput = buildSynianSpeech(
         'Hubo un error al conectar con Synian Core.',
-        synianSession.language || getRequestLocale(handlerInput)
+        handlerInput
       );
       return handlerInput.responseBuilder.speak(speakOutput).getResponse();
     }
@@ -260,18 +257,16 @@ const ConversacionIntentHandler = {
 // Salida manual de modo Synian
 const ExitSynianIntentHandler = {
   canHandle: (input) =>
-    isSynianSessionActive(input) &&
     Alexa.getRequestType(input.requestEnvelope) === 'IntentRequest' &&
     input.requestEnvelope.request.intent.name === 'ExitSynianIntent',
   async handle(handlerInput) {
     const attributes = getSessionAttributes(handlerInput);
-    const synianSession = attributes.synian || {};
     try {
-      if (synianSession.sessionId) {
+      if (attributes.sessionId) {
         await requestSynianCore({
           prompt: '__end_synian_session__',
           origin: 'alexa',
-          context: buildCoreContext(handlerInput, synianSession.sessionId)
+          context: buildCoreContext(handlerInput, attributes.sessionId)
         });
       }
     } catch (err) {
@@ -279,9 +274,9 @@ const ExitSynianIntentHandler = {
     }
 
     clearSynianSession(handlerInput);
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Volviendo a modo Alexa.',
-      getRequestLocale(handlerInput)
+      handlerInput
     );
     return handlerInput.responseBuilder.speak(speakOutput).getResponse();
   }
@@ -293,9 +288,9 @@ const HelpIntentHandler = {
     Alexa.getRequestType(input.requestEnvelope) === 'IntentRequest' &&
     input.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent',
   handle: (input) => {
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Puedes decir “activa modo Synian” o “salir de modo Synian”.',
-      getRequestLocale(input)
+      input
     );
     return input.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
   }
@@ -309,7 +304,7 @@ const CancelAndStopIntentHandler = {
     ),
   handle: (input) => {
     clearSynianSession(input);
-    const speakOutput = buildAlexaSSML('Volviendo a modo Alexa.', getRequestLocale(input));
+    const speakOutput = buildAlexaSpeech('Volviendo a modo Alexa.', input);
     return input.responseBuilder.speak(speakOutput).getResponse();
   }
 };
@@ -320,9 +315,9 @@ const SessionEndedRequestHandler = {
   handle: (input) => {
     console.log('🔚 Sesión finalizada:', JSON.stringify(input.requestEnvelope));
     clearSynianSession(input);
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Hasta luego. Puedes decir “abre modo Synian” para volver a iniciar.',
-      getRequestLocale(input)
+      input
     );
     return input.responseBuilder.speak(speakOutput).getResponse();
   }
@@ -337,13 +332,16 @@ const ErrorHandler = {
   },
   handle(handlerInput, error) {
     console.error('⚠️ Error global:', error);
-    const speakOutput = buildAlexaSSML(
+    const speakOutput = buildAlexaSpeech(
       'Hubo un problema al procesar tu solicitud. Inténtalo nuevamente en unos segundos.',
-      getRequestLocale(handlerInput)
+      handlerInput
     );
     return handlerInput.responseBuilder.speak(speakOutput).reprompt('¿Deseas intentar de nuevo?').getResponse();
   }
 };
+
+// TODO(backend): Documentar el campo expiresAt y su formato para que el skill solo lo muestre.
+// TODO(backend): Confirmar si data.reply incluye localización para el saludo post-auth.
 
 // ===================================================
 // 🧩 Exportar skill principal
